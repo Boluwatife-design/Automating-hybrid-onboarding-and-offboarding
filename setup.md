@@ -26,3 +26,10 @@
 - Copy the secret value immediately (you won’t see it again) — store it securely (e.g., Windows Credential Manager, not in the script)
 
 <img width="1260" height="637" alt="image" src="https://github.com/user-attachments/assets/8f4b249e-c165-49a1-8f2b-ba1a585f182c" />
+
+# 4. Prep the machine that will run the script
+
+- Install RSAT: Add-WindowsFeature RSAT-AD-PowerShell (on a server) or via Windows Optional Features (on a PC)
+- Install the Graph module: Install-Module Microsoft.Graph -Scope AllUsers
+<img width="1598" height="215" alt="image" src="https://github.com/user-attachments/assets/debbde4b-fbcf-4f73-80ed-c4e686176c68" />
+
