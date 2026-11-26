@@ -67,7 +67,6 @@
           [Parameter(Mandatory)] [string]$LastName,
           [Parameter(Mandatory)] [string]$Department,
           [Parameter(Mandatory)] [string]$Manager,          # sAMAccountName of manager
-          [Parameter(Mandatory)] [ValidateSet("Remote","Office","Hybrid")] [string]$WorkMode,
           [Parameter(Mandatory)] [string]$JobTitle,
           [Parameter(Mandatory)] [datetime]$StartDate,
           [string]$Domain           = "corp.contoso.com",
@@ -76,7 +75,10 @@
           [string]$UsageLocation    = "NG",                 # two-letter country code where the staff work
           [string]$SyncServer       = "AADCONNECT01",       # server running Entra Connect (use $env:COMPUTERNAME if it's this machine)
           [string]$LogPath          = "C:\Logs\Onboarding",
-          [string]$TeamsWebhookUrl  = $null
+          [string]$TeamsWebhookUrl  = $null,
+          [Parameter(Mandatory)] [string]$TenantId,
+          [Parameter(Mandatory)] [string]$ClientId,
+          [Parameter(Mandatory)] [securestring]$ClientSecret
       )
       
       $ErrorActionPreference = "Stop"
@@ -227,3 +229,102 @@
           Send-TeamsAlert -Text "❌ Onboarding FAILED for $FirstName $LastName. Error: $($_.Exception.Message)" -Color "FF0000"
           throw
       }
+
+- edit file to include
+
+
+| Setting	| Value |
+|---|---|
+| $UpnSuffix	| contoso.com" |
+| $Domain	| "corp.contoso.com" |
+| $targetOU	| "OU=$Department,OU=Employee,DC=corp,DC=contoso,DC=com" |
+| $LicenseSkuId |	the SkuId from step 8 |
+| Entra Connect server | "AAD-01" (once confirmed) |
+| Groups section	| Edit to fit org |
+| Add-Type -AssemblyName System.Web	added at the top, under the param(...) block
+| Update-MgUser ... -UsageLocation "NG"	added just before the Set-MgUserLicense line
+
+- get sku by - opening pwsh as admin >>  Connect-MgGraph -Scopes "Organization.Read.All" >> Get-MgSubscribedSku | Select-Object SkuPartNumber, SkuId, ConsumedUnits
+
+<img width="981" height="498" alt="image" src="https://github.com/user-attachments/assets/64b16669-840d-4508-a21b-da928d0d24ea" />
+
+- Check the script for typos
+- Open PowerShell and run:
+
+      $errs=$null; [void][System.Management.Automation.Language.Parser]::ParseFile("C:\Scripts\New-EmployeeOnboarding.ps1",[ref]$null,[ref]$errs); $errs
+      $errs=$null; [void][System.Management.Automation.Language.Parser]::ParseFile("C:\Scripts\New-EmployeeOnboarding.ps1",[ref]$null,[ref]$errs); $errs | Select-Object @{n='Line';e={$_.Extent.StartLineNumber}}, Message | Format-Table -Wrap
+-To remove errors, run:
+
+                  $p = "C:\Scripts\New-EmployeeOnboarding.ps1"
+      Copy-Item $p "$p.bak"
+      
+      $t = [IO.File]::ReadAllText($p, [Text.Encoding]::UTF8)
+      $t = $t -replace '[\u201C\u201D]', '"'
+      $t = $t -replace '[\u2018\u2019]', "'"
+      $t = $t -replace '[\u2013\u2014]', '-'
+      $t = $t -replace '[^\x00-\x7F]', ''
+      [IO.File]::WriteAllText($p, $t, (New-Object Text.UTF8Encoding($true)))
+
+  <img width="1899" height="711" alt="image" src="https://github.com/user-attachments/assets/4037d603-7c21-46d5-b6fe-04be71c792f3" />
+
+
+# 5: Make sure the account running it has rights
+- In Active Directory Users and Computers, right-click Linkorg-Users, then Delegate Control.
+- Add the account you'll run the script with.
+- Choose Create, delete, and manage user accounts, then finish.
+If you're logged in as a Domain Admin, you can skip this for the test.
+
+
+# 6: Allow the script to run
+powershell
+
+     Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+- This only lasts for that window, so it's safe.
+<img width="1689" height="257" alt="image" src="https://github.com/user-attachments/assets/16063066-7210-465f-893e-85b74fbc00e4" />
+
+
+
+# 7: Create a secret file in 'C'
+- Use the PowerShell window you'll use to run the script, using the same account:
+
+      New-Item -ItemType Directory -Path C:\Secrets -Force
+      Read-Host "Paste client secret" -AsSecureString | Export-Clixml -Path "C:\Secrets\onboarding-secret.xml"
+
+- When it prompts, paste the client secret value from your app registration (Certificates & secrets). It's the long value, not the "Secret ID". Nothing shows on screen while you paste, which is normal. Press Enter.
+- Confirm the file exists:
+
+      Test-Path C:\Secrets\onboarding-secret.xml
+      It should print True.
+
+- If you no longer have the secret value (Entra only shows it once), create a new one: app registration, then Certificates & secrets, then New client secret, and copy the value immediately.
+
+# 8: Run the test with a fake user
+
+- Pick a manager who exists in AD. Use their login name (the sAMAccountName), not their full name. Use a department that matches an OU exactly:
+
+powershell
+
+                  $secureSecret = Import-Clixml -Path "C:\Secrets\onboarding-secret.xml"
+                  
+                  C:\Scripts\New-EmployeeOnboarding.ps1 `
+                      -FirstName "Test" -LastName "Onboarding" -Department "FINANCE" `
+                      -Manager "REAL.MANAGER.LOGIN" -JobTitle "Test Account" -StartDate (Get-Date) `
+                      -TenantId "YOUR-TENANT-ID" -ClientId "YOUR-CLIENT-ID" -ClientSecret $secureSecret
+
+- Replace the three uppercase values. It takes about 5 minutes. Don't close the window. You'll see lines like "AD account created", "Delta sync triggered", "Sync check attempt 1/10", and finally "License assigned" and "Onboarding completed successfully"
+<img width="962" height="440" alt="image" src="https://github.com/user-attachments/assets/d9a8c963-ced1-47c7-8dc9-c3c32ec438d5" />
+
+
+
+# 9: Verify
+- Active Directory: test.onboarding is in Contoso-Users > FINANCE
+- Entra admin center, Users: the user appears with a Business license
+- Log file: open the newest file in C:\Logs\Onboarding\ and confirm there are no ERROR lines
+<img width="675" height="126" alt="image" src="https://github.com/user-attachments/assets/7be8a16b-cf9c-4e5c-b90d-6f7ba74d0a20" />
+
+
+# 10: Clean up the test user
+- Delete test.onboarding in Active Directory.
+- Run Start-ADSyncSyncCycle -PolicyType Delta on the Entra Connect server.
+- In the Entra admin center, the user moves to Deleted users, and the license is freed up.
