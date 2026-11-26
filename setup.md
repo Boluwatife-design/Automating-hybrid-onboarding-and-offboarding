@@ -313,7 +313,9 @@ powershell
                       -TenantId "YOUR-TENANT-ID" -ClientId "YOUR-CLIENT-ID" -ClientSecret $secureSecret
 
 - Replace the three uppercase values. It takes about 5 minutes. Don't close the window. You'll see lines like "AD account created", "Delta sync triggered", "Sync check attempt 1/10", and finally "License assigned" and "Onboarding completed successfully"
-<img width="962" height="440" alt="image" src="https://github.com/user-attachments/assets/d9a8c963-ced1-47c7-8dc9-c3c32ec438d5" />
+
+<img width="481" height="220" alt="image (2)" src="https://github.com/user-attachments/assets/929752f0-53c4-4017-b77b-9cc5543fe47e" />
+
 
 
 
@@ -322,6 +324,8 @@ powershell
 - Entra admin center, Users: the user appears with a Business license
 - Log file: open the newest file in C:\Logs\Onboarding\ and confirm there are no ERROR lines
 <img width="675" height="126" alt="image" src="https://github.com/user-attachments/assets/7be8a16b-cf9c-4e5c-b90d-6f7ba74d0a20" />
+<img width="718" height="40" alt="image (1)" src="https://github.com/user-attachments/assets/dfb7c6f8-053a-42df-8b45-9e59abf5bc2b" />
+<img width="298" height="346" alt="image" src="https://github.com/user-attachments/assets/45325c85-8402-4f63-b50c-50be8a115403" />
 
 
 # 10: Clean up the test user
