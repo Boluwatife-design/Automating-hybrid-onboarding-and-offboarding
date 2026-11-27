@@ -27,12 +27,40 @@
 
 <img width="1260" height="637" alt="image" src="https://github.com/user-attachments/assets/8f4b249e-c165-49a1-8f2b-ba1a585f182c" />
 
-# 4. Prep the machine that will run the script
+# 4. Store the client secret
 
-- Install RSAT: Add-WindowsFeature RSAT-AD-PowerShell (on a server) or via Windows Optional Features (on a PC)
-- Install the Graph module: Install-Module Microsoft.Graph -Scope AllUsers
+- Run this in PowerShell as the same account, on the same machine, that will run the script:
+  
+      New-Item -ItemType Directory -Path C:\Secrets -Force
+      Read-Host "Paste client secret" -AsSecureString | Export-Clixml -Path "C:\Secrets\onboarding-secret.xml"
+  
+The file is encrypted to that account and machine. It cannot be copied to another machine or opened by another account.
+
+
+# 5. Get your license SKU ID
+
+    Connect-MgGraph -Scopes "Organization.Read.All"
+    Get-MgSubscribedSku | Select-Object SkuPartNumber, SkuId, ConsumedUnits
+
+- O365_BUSINESS_ESSENTIALS = Business Basic
+- O365_BUSINESS_PREMIUM = Business Standard
+
+Copy the SkuId for the plan new hires should receive
+
+# 6. Prep the machine that will run the script
+
+- Install RSAT: 
+
+      Add-WindowsFeature RSAT-AD-PowerShell (on a server) or via Windows Optional Features (on a PC)
+
+- Install the Graph module: 
+
+      Install-Module Microsoft.Graph -Scope AllUsers
+Close PowerShell and open a fresh admin window after installing the Graph module (see Troubleshooting).
 <img width="1598" height="215" alt="image" src="https://github.com/user-attachments/assets/debbde4b-fbcf-4f73-80ed-c4e686176c68" />
 
+# 7. Configure the script
+- Save the script as C:\Scripts\New-EmployeeOnboarding.ps1 and set:
 
 
                         <#
@@ -470,14 +498,14 @@
   <img width="1899" height="711" alt="image" src="https://github.com/user-attachments/assets/4037d603-7c21-46d5-b6fe-04be71c792f3" />
 
 
-# 5: Make sure the account running it has rights
+# 8: Make sure the account running it has rights
 - In Active Directory Users and Computers, right-click Linkorg-Users, then Delegate Control.
 - Add the account you'll run the script with.
 - Choose Create, delete, and manage user accounts, then finish.
 If you're logged in as a Domain Admin, you can skip this for the test.
 
 
-# 6: Allow the script to run
+# 9: Allow the script to run
 powershell
 
      Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
@@ -487,7 +515,7 @@ powershell
 
 
 
-# 7: Create a secret file in 'C'
+# 10: Create a secret file in 'C'
 - Use the PowerShell window you'll use to run the script, using the same account:
 
       New-Item -ItemType Directory -Path C:\Secrets -Force
@@ -501,7 +529,7 @@ powershell
 
 - If you no longer have the secret value (Entra only shows it once), create a new one: app registration, then Certificates & secrets, then New client secret, and copy the value immediately.
 
-# 8: Run the test with a fake user
+# 11: Run the test with a fake user
 
 - Pick a manager who exists in AD. Use their login name (the sAMAccountName), not their full name. Use a department that matches an OU exactly:
 
@@ -533,7 +561,7 @@ powershell
 
 
 
-# 9: Verify
+# 12: Verify
 - Active Directory: tonboarding is in Contoso-Users > FINANCE
 - Entra admin center, Users: the user appears with a Business license
 - Log file: open the newest file in C:\Logs\Onboarding\ and confirm there are no ERROR lines
@@ -546,7 +574,7 @@ powershell
 
 
 
-# 10: Clean up the test user
+# 13: Clean up the test user
 - Delete test.onboarding in Active Directory.
 - Run Start-ADSyncSyncCycle -PolicyType Delta on the Entra Connect server.
 - In the Entra admin center, the user moves to Deleted users, and the license is freed up.
