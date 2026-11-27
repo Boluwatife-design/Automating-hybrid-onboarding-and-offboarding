@@ -497,7 +497,7 @@ Close PowerShell and open a fresh admin window after installing the Graph module
 
 
 # 8: Make sure the account running it has rights
-- In Active Directory Users and Computers, right-click Linkorg-Users, then Delegate Control.
+- In Active Directory Users and Computers, right-click contoso-Users, then Delegate Control.
 - Add the account you'll run the script with.
 - Choose Create, delete, and manage user accounts, then finish.
 If you're logged in as a Domain Admin, you can skip this for the test.
@@ -519,7 +519,6 @@ powershell
 
 powershell
 
-            Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
             $secureSecret = Import-Clixml -Path "C:\Secrets\onboarding-secret.xml"
              
             C:\Scripts\New-EmployeeOnboarding.ps1 `
@@ -533,7 +532,7 @@ powershell
                 -ClientId "hbhvghmhjkmjhvhjmvghjkjhhghhggbbhhjh" `
                 -ClientSecret $secureSecret
 
-- Replace the three uppercase values. It takes about 5 minutes. Don't close the window. You'll see lines like "AD account created", "Delta sync triggered", "Sync check attempt 1/10", and finally "License assigned" and "Onboarding completed successfully"
+- Put the correct values. It takes about 5 minutes. Don't close the window. You'll see lines like "AD account created", "Delta sync triggered", "Sync check attempt 1/10", and finally "License assigned" and "Onboarding completed successfully"
 <img width="536" height="314" alt="image (3)" src="https://github.com/user-attachments/assets/5e78e85d-aa36-4190-baeb-1cb3b3023790" />
 
 <img width="1029" height="819" alt="image" src="https://github.com/user-attachments/assets/a5a48ba1-e3d1-4639-aec4-7ae18ef7bbf5" />
