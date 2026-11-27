@@ -35,7 +35,7 @@
       Read-Host "Paste client secret" -AsSecureString | Export-Clixml -Path "C:\Secrets\onboarding-secret.xml"
   
 The file is encrypted to that account and machine. It cannot be copied to another machine or opened by another account.
-
+- If you no longer have the secret value (Entra only shows it once), create a new one: app registration, then Certificates & secrets, then New client secret, and copy the value immediately.
 
 # 5. Get your license SKU ID
 
@@ -474,8 +474,6 @@ Close PowerShell and open a fresh admin window after installing the Graph module
 | Add-Type -AssemblyName System.Web	added at the top, under the param(...) block
 | Update-MgUser ... -UsageLocation "NG"	added just before the Set-MgUserLicense line
 
-- get sku by - opening pwsh as admin >>  Connect-MgGraph -Scopes "Organization.Read.All" >> Get-MgSubscribedSku | Select-Object SkuPartNumber, SkuId, ConsumedUnits
-
 <img width="981" height="498" alt="image" src="https://github.com/user-attachments/assets/64b16669-840d-4508-a21b-da928d0d24ea" />
 
 - Check the script for typos
@@ -515,21 +513,7 @@ powershell
 
 
 
-# 10: Create a secret file in 'C'
-- Use the PowerShell window you'll use to run the script, using the same account:
-
-      New-Item -ItemType Directory -Path C:\Secrets -Force
-      Read-Host "Paste client secret" -AsSecureString | Export-Clixml -Path "C:\Secrets\onboarding-secret.xml"
-
-- When it prompts, paste the client secret value from your app registration (Certificates & secrets). It's the long value, not the "Secret ID". Nothing shows on screen while you paste, which is normal. Press Enter.
-- Confirm the file exists:
-
-      Test-Path C:\Secrets\onboarding-secret.xml
-      It should print True.
-
-- If you no longer have the secret value (Entra only shows it once), create a new one: app registration, then Certificates & secrets, then New client secret, and copy the value immediately.
-
-# 11: Run the test with a fake user
+# 10: Run the test with a fake user
 
 - Pick a manager who exists in AD. Use their login name (the sAMAccountName), not their full name. Use a department that matches an OU exactly:
 
@@ -561,7 +545,7 @@ powershell
 
 
 
-# 12: Verify
+# 11: Verify
 - Active Directory: tonboarding is in Contoso-Users > FINANCE
 - Entra admin center, Users: the user appears with a Business license
 - Log file: open the newest file in C:\Logs\Onboarding\ and confirm there are no ERROR lines
@@ -574,7 +558,7 @@ powershell
 
 
 
-# 13: Clean up the test user
+# 12: Clean up the test user
 - Delete test.onboarding in Active Directory.
 - Run Start-ADSyncSyncCycle -PolicyType Delta on the Entra Connect server.
 - In the Entra admin center, the user moves to Deleted users, and the license is freed up.
